@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecom Express</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #2e8b57;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #fff;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        a {
+            text-decoration: none;
+            background-color: #2e8b57;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        a:hover {
+            background-color: #3cb371;
+        }
+
+        .cart-section {
+            background-color: #fafad2;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+
+        .cart-item {
+            background-color: #fffacd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #f5deb3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Ecom Express</h1>
+
+    <div class="container">
+        <h2>Products</h2>
+        <ul>
+            {% for product in products %}
+            <li>
+                <span>{{ product.name }} - ${{ product.price }}</span>
+                <a href="/add_to_cart/{{ product.id }}">Add to Cart</a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <div class="cart-section">
+            <h2>Your Cart</h2>
+            <ul>
+                {% for item in cart %}
+                <li class="cart-item">{{ item.name }} - ${{ item.price }}</li>
+                {% endfor %}
+                {% if cart|length == 0 %}
+                <li>Your cart is empty.</li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
