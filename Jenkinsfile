@@ -12,8 +12,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Clone the GitHub repository using Git credentials
-                git branch: 'master',
-                    credentialsId: "${GIT_CREDENTIALS_ID}",
+                git branch: 'main',
                     url: "${GIT_REPO}"
             }
         }
