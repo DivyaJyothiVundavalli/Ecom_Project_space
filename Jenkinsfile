@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "divyavundavalli/my-app"  // Replace with your Docker Hub repository
+        DOCKER_IMAGE = "divyavundavalli/ecom_project"  // Replace with your Docker Hub repository
         DOCKER_CREDENTIALS_ID = "dockerhub_credentials" // DockerHub credentials ID in Jenkins
-        GIT_REPO = "https://github.com/<your-username>/<your-repo-name>.git" // Your GitHub repo URL
-        GIT_CREDENTIALS_ID = "github_credentials"  // Jenkins credentials ID for GitHub
+        GIT_REPO = "https://github.com/DivyaJyothiVundavalli/Ecom_Project_space.git" // Your GitHub repo URL
+        // GIT_CREDENTIALS_ID = "github_credentials"  // Jenkins credentials ID for GitHub
     }
 
     stages {
