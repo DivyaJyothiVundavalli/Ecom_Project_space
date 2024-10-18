@@ -18,17 +18,17 @@ pipeline {
             }
         }
 
-        stage("Docker Build & Push"){
-            steps{
-                script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
-                       sh "docker build -t ecom-project-jenkins-ci ."
-                       sh "docker tag ecom-project-jenkins-ci divyavundavalli/ecom_project:latest "
-                       sh "docker push divyavundavalli/ecom_project:latest "
-                    }
-                }
-            }
-        }
+        // stage("Docker Build & Push"){
+        //     steps{
+        //         script{
+        //            withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
+        //                sh "docker build -t ecom-project-jenkins-ci ."
+        //                sh "docker tag ecom-project-jenkins-ci divyavundavalli/ecom_project:latest "
+        //                sh "docker push divyavundavalli/ecom_project:latest "
+        //             }
+        //         }
+        //     }
+        // }
         
     //     stage('Build Docker Image') {
     //         steps {
