@@ -6,6 +6,7 @@ pipeline {
         DOCKER_CREDENTIALS_ID = "dockerhub_credentials" // DockerHub credentials ID in Jenkins
         GIT_REPO = "https://github.com/DivyaJyothiVundavalli/Ecom_Project_space.git" // Your GitHub repo URL
         // GIT_CREDENTIALS_ID = "github_credentials"  // Jenkins credentials ID for GitHub
+        PATH = "/usr/local/bin:${env.PATH}" // Add Docker binary path
     }
 
     stages {
