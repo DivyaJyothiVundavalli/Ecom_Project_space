@@ -35,21 +35,34 @@ pipeline {
             }
         }
         
-        stage('Docker Build & Push') {
+        stage('Docker Build') {
             steps {
                 script {
                     try {
-                        // Build the Docker image
+                        echo "Building Docker image..."
                         sh """
                             docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} .
                             docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest
-                            
-                            # Push images
+                        """
+                    } catch (Exception e) {
+                        echo "Error during Docker build: ${e.getMessage()}"
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                script {
+                    try {
+                        echo "Pushing Docker image to registry..."
+                        sh """
                             docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
                             docker push ${DOCKER_IMAGE}:latest
                         """
                     } catch (Exception e) {
-                        echo "Error during Docker build/push: ${e.getMessage()}"
+                        echo "Error during Docker push: ${e.getMessage()}"
                         throw e
                     }
                 }
@@ -58,6 +71,12 @@ pipeline {
     }
     
     post {
+        success {
+            echo "Pipeline executed successfully!"
+        }
+        failure {
+            echo "Pipeline failed! Check the logs for details."
+        }
         always {
             sh '''
                 # Cleanup
