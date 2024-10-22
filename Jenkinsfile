@@ -54,10 +54,10 @@ pipeline {
         // }
     }
 
-    post {
-        always {
-            // Clean up Docker images after build
-            // sh "docker rmi ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-        }
-    }
+    // post {
+    //     always {
+    //         // Clean up Docker images after build
+    //         // sh "docker rmi ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+    //     }
+    // }
 }
