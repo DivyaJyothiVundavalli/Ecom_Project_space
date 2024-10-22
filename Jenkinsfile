@@ -30,14 +30,14 @@ pipeline {
             }
         }
         
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    // Build Docker image using the Dockerfile in the repository
-                    def image = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
-                }
-            }
-        }
+        // stage('Build Docker Image') {
+        //     steps {
+        //         script {
+        //             // Build Docker image using the Dockerfile in the repository
+        //             def image = docker.build("${DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+        //         }
+        //     }
+        // }
 
         // stage('Push Docker Image') {
         //     steps {
@@ -52,7 +52,7 @@ pipeline {
         //         }
         //     }
         // }
-    }
+    // }
 
     // post {
     //     always {
