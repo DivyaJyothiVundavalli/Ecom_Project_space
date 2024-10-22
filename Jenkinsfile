@@ -58,7 +58,6 @@ pipeline {
         always {
             // Clean up Docker images after build
             // sh "docker rmi ${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
-            sh "echo "hello""
         }
     }
 }
