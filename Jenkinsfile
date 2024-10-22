@@ -21,7 +21,7 @@ pipeline {
         stage("Docker Build & Push"){
             steps{
                 script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
+                   withDockerRegistry(credentialsId: 'dockerhub_credentials', toolName: 'docker'){   
                        sh "docker build -t ecom-project-jenkins-ci ."
                        sh "docker tag ecom-project-jenkins-ci divyavundavalli/ecom_project:latest "
                        sh "docker push divyavundavalli/ecom_project:latest "
