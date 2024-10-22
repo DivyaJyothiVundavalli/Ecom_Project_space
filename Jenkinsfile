@@ -3,15 +3,14 @@ pipeline {
     
     environment {
         DOCKER_IMAGE = "divyavundavalli/ecom_project"
-        DOCKER_CREDENTIALS_ID = "docker" // Changed to match standard Docker credentials ID
+        DOCKER_CREDENTIALS_ID = "docker"  // Ensure that this matches the credentials ID you set in Jenkins
         GIT_REPO = "https://github.com/DivyaJyothiVundavalli/Ecom_Project_space.git"
     }
     
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: "${GIT_REPO}"
+                git branch: 'main', url: "${GIT_REPO}"
             }
         }
         
