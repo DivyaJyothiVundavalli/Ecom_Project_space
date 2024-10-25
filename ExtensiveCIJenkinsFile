@@ -4,25 +4,26 @@ pipeline {
     environment {
         DOCKER_IMAGE = "divyavundavalli/ecom_projectExCI"
         DOCKER_REGISTRY_CREDENTIALS = credentials('docker')
-        // For Python virtual environment
         VENV_NAME = "venv"
         PYTHON_VERSION = "python3"
     }
     
-    // options {
-    //     // Keep the 10 most recent builds
-    //     buildDiscarder(logRotator(numToKeepStr: '10'))
-    //     // Timeout if build takes more than 1 hour
-    //     timeout(time: 1, unit: 'HOURS')
-    //     // Add timestamps to console output
-    //     timestamps()
-    // }
+  //  options {
+ //      buildDiscarder(logRotator(numToKeepStr: '10'))
+ //       timeout(time: 1, unit: 'HOURS')
+ //      timestamps()
+//      skipDefaultCheckout()
+    }
     
     stages {
+        stage('Cleanup Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        
         stage('Checkout') {
             steps {
-                // Clean workspace before build
-                cleanWs()
                 git branch: 'main',
                     url: "https://github.com/DivyaJyothiVundavalli/Ecom_Project_space.git"
             }
@@ -31,11 +32,13 @@ pipeline {
         stage('Setup Python Environment') {
             steps {
                 script {
-                    // Create and activate virtual environment
                     sh """
                         ${PYTHON_VERSION} -m venv ${VENV_NAME}
                         . ${VENV_NAME}/bin/activate
                         pip install --upgrade pip
+                        # Install with specific versions to avoid conflicts
+                        # pip install Flask==2.0.1 Werkzeug==2.0.1
+                        # pip install pytest==7.4.0 pytest-cov==4.1.0
                         pip install -r requirements.txt
                     """
                 }
@@ -62,21 +65,33 @@ pipeline {
                 stage('Security Scan') {
                     steps {
                         script {
-                            sh """
-                                . ${VENV_NAME}/bin/activate
-                                # Install security scanning tools
-                                pip install bandit safety
-                                
-                                # Run Bandit security scan
-                                bandit -r . -f json -o bandit-results.json -ll || true
-                                
-                                # Check dependencies for known security vulnerabilities
-                                safety check || true
-                                
-                                # Run detect-secrets for credential scanning
-                                pip install detect-secrets
-                                detect-secrets scan . > secrets-scan.json || true
-                            """
+                            try {
+                                sh """
+                                    . ${VENV_NAME}/bin/activate
+                                    # Install security scanning tools
+                                    pip install bandit safety detect-secrets
+                                    
+                                    # Create reports directory
+                                    mkdir -p security-reports
+                                    
+                                    # Run Bandit security scan
+                                    bandit -r . -f json -o security-reports/bandit-results.json -ll || true
+                                    
+                                    # Check dependencies for known security vulnerabilities
+                                    safety check --output json > security-reports/safety-results.json || true
+                                    
+                                    # Run detect-secrets for credential scanning
+                                    detect-secrets scan . > security-reports/secrets-scan.json || true
+                                """
+                            } catch (Exception e) {
+                                echo "Security scan failed: ${e.getMessage()}"
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'security-reports/**/*', allowEmptyArchive: true
                         }
                     }
                 }
@@ -84,39 +99,38 @@ pipeline {
         }
         
         stage('Run Tests') {
-        steps {
-          script {
-            try {
-                sh """
-                    . ${VENV_NAME}/bin/activate
-                    # Create coverage directory
-                    mkdir -p coverage
-                    
-                    # Run tests with coverage
-                    python -m pytest -v \
-                        --cov=. \
-                        --cov-report=xml:coverage/coverage.xml \
-                        --cov-report=html:coverage/htmlcov \
-                        test.py
-                """
-               } catch (Exception e) {
-                currentBuild.result = 'UNSTABLE'
-                echo "Tests failed: ${e.getMessage()}"
-              }
+            steps {
+                script {
+                    try {
+                        sh """
+                            . ${VENV_NAME}/bin/activate
+                            # Create coverage directory
+                            mkdir -p coverage
+                            
+                            # Run tests with coverage
+                            python -m pytest -v \
+                                --cov=. \
+                                --cov-report=xml:coverage/coverage.xml \
+                                --cov-report=html:coverage/htmlcov \
+                                test.py
+                        """
+                    } catch (Exception e) {
+                        currentBuild.result = 'UNSTABLE'
+                        echo "Tests failed: ${e.getMessage()}"
+                    }
+                }
             }
-           }
             post {
                 always {
-                    // Archive test and coverage reports
-                    archiveArtifacts artifacts: 'coverage.xml, htmlcov/**'
-                    // Publish coverage report
-                    publishHTML(target: [
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: false,
+                    archiveArtifacts artifacts: 'coverage/**/*', allowEmptyArchive: true
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
                         keepAll: true,
-                        reportDir: 'htmlcov',
+                        reportDir: 'coverage/htmlcov',
                         reportFiles: 'index.html',
-                        reportName: 'Coverage Report'
+                        reportName: 'Coverage Report',
+                        reportTitles: 'Coverage Report'
                     ])
                 }
             }
@@ -126,7 +140,6 @@ pipeline {
             steps {
                 script {
                     try {
-                        // Build Docker image
                         sh """
                             docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} \
                                 --build-arg PYTHON_VERSION=${PYTHON_VERSION} .
@@ -143,21 +156,31 @@ pipeline {
         stage('Security Scan Docker Image') {
             steps {
                 script {
-                    sh """
-                        # Install Trivy
-                        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+                    try {
+                        sh """
+                            # Install Trivy
+                            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
-                        # Scan Docker image
-                        trivy image ${DOCKER_IMAGE}:${BUILD_NUMBER} --no-progress --exit-code 0 \
-                            --severity HIGH,CRITICAL --format template \
-                            --template '{{- range . }}{{- range .Vulnerabilities }}{{println .VulnerabilityID .Severity .PkgName .InstalledVersion .FixedVersion }}{{- end }}{{- end }}' \
-                            > trivy-results.txt
-                    """
+                            # Create directory for scan results
+                            mkdir -p security-reports
+                            
+                            # Scan Docker image
+                            trivy image ${DOCKER_IMAGE}:${BUILD_NUMBER} \
+                                --no-progress --exit-code 0 \
+                                --severity HIGH,CRITICAL \
+                                --format template \
+                                --template '{{- range . }}{{- range .Vulnerabilities }}{{println .VulnerabilityID .Severity .PkgName .InstalledVersion .FixedVersion }}{{- end }}{{- end }}' \
+                                > security-reports/trivy-results.txt
+                        """
+                    } catch (Exception e) {
+                        echo "Trivy scan failed: ${e.getMessage()}"
+                        currentBuild.result = 'UNSTABLE'
+                    }
                 }
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'trivy-results.txt'
+                    archiveArtifacts artifacts: 'security-reports/trivy-results.txt', allowEmptyArchive: true
                 }
             }
         }
@@ -166,13 +189,11 @@ pipeline {
             steps {
                 script {
                     try {
-                        // Remove existing credentials and login
                         sh '''
                             rm -rf ~/.docker/config.json || true
                             echo $DOCKER_REGISTRY_CREDENTIALS_PSW | docker login -u $DOCKER_REGISTRY_CREDENTIALS_USR --password-stdin
                         '''
                         
-                        // Push Docker images
                         sh """
                             docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}
                             docker push ${DOCKER_IMAGE}:latest
@@ -189,7 +210,6 @@ pipeline {
     post {
         success {
             echo "Pipeline executed successfully!"
-            // Notify on success if needed
             emailext (
                 subject: "Pipeline Successful: ${currentBuild.fullDisplayName}",
                 body: """
@@ -213,24 +233,30 @@ pipeline {
             )
         }
         always {
-            // Clean up Docker
-            sh '''
-                docker logout || true
-                rm -rf ~/.docker/config.json || true
-            '''
-            
-            // Remove Docker images
-            sh """
-                docker rmi ${DOCKER_IMAGE}:${BUILD_NUMBER} || true
-                docker rmi ${DOCKER_IMAGE}:latest || true
-            """
-            
-            // Clean workspace
-            cleanWs(cleanWhenNotBuilt: false,
-                   deleteDirs: true,
-                   disableDeferredWipeout: true,
-                   cleanWhenSuccess: true,
-                   cleanWhenUnstable: true)
+            script {
+                // Clean up Docker
+                sh '''
+                    docker logout || true
+                    docker system prune -f || true
+                    rm -rf ~/.docker/config.json || true
+                '''
+                
+                // Remove specific Docker images
+                sh """
+                    docker rmi ${DOCKER_IMAGE}:${BUILD_NUMBER} || true
+                    docker rmi ${DOCKER_IMAGE}:latest || true
+                    docker image prune -f
+                """
+                
+                // Clean workspace
+                cleanWs(
+                    cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    cleanWhenSuccess: true,
+                    cleanWhenUnstable: true
+                )
+            }
         }
     }
 }
