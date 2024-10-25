@@ -8,13 +8,6 @@ pipeline {
         PYTHON_VERSION = "python3"
     }
     
-  //  options {
- //      buildDiscarder(logRotator(numToKeepStr: '10'))
- //       timeout(time: 1, unit: 'HOURS')
- //      timestamps()
-//      skipDefaultCheckout()
-    }
-    
     stages {
         stage('Cleanup Workspace') {
             steps {
@@ -37,8 +30,8 @@ pipeline {
                         . ${VENV_NAME}/bin/activate
                         pip install --upgrade pip
                         # Install with specific versions to avoid conflicts
-                        # pip install Flask==2.0.1 Werkzeug==2.0.1
-                        # pip install pytest==7.4.0 pytest-cov==4.1.0
+                        pip install Flask==2.0.1 Werkzeug==2.0.1
+                        pip install pytest==7.4.0 pytest-cov==4.1.0
                         pip install -r requirements.txt
                     """
                 }
