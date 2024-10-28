@@ -152,20 +152,20 @@ pipeline {
                     try {
                         sh """
                             # Install Trivy
-                            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+                            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b ${WORKSPACE}/trivy
 
-                            # Create directory for scan results
-                            mkdir -p security-reports
-                            
-                            # Scan Docker image
-                            trivy image ${DOCKER_IMAGE}:${BUILD_NUMBER} \
-                                --no-progress --exit-code 0 \
-                                --severity HIGH,CRITICAL \
-                                --format template \
-                                --template '{{- range . }}{{- range .Vulnerabilities }}{{println .VulnerabilityID .Severity .PkgName .InstalledVersion .FixedVersion }}{{- end }}{{- end }}' \
-                                > security-reports/trivy-results.txt
-                        """
-                    } catch (Exception e) {
+                           # Create directory for scan results
+                           mkdir -p security-reports
+
+                         # Run Trivy from the new location
+                         ${WORKSPACE}/trivy/trivy image ${DOCKER_IMAGE}:${BUILD_NUMBER} \
+                         --no-progress --exit-code 0 \
+                         --severity HIGH,CRITICAL \
+                         --format template \
+                         --template '{{- range . }}{{- range .Vulnerabilities }}{{println .VulnerabilityID .Severity .PkgName .InstalledVersion .FixedVersion }}{{- end }}{{- end }}' \
+                         > security-reports/trivy-results.txt
+                       """
+                     } catch (Exception e) {
                         echo "Trivy scan failed: ${e.getMessage()}"
                         currentBuild.result = 'UNSTABLE'
                     }
