@@ -152,7 +152,7 @@ pipeline {
                     try {
                         sh """
                             # Install Trivy
-                            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b ${WORKSPACE}/trivy
+                            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | TAG=latest sh -s -- -b ${WORKSPACE}/trivy
 
                            # Create directory for scan results
                            mkdir -p security-reports
