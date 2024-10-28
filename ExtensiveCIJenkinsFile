@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_IMAGE = "divyavundavalli/ecom_projectExCI"
+        DOCKER_IMAGE = "divyavundavalli/ecom_projectexci"
         DOCKER_REGISTRY_CREDENTIALS = credentials('docker')
         VENV_NAME = "venv"
         PYTHON_VERSION = "python3"
