@@ -23,5 +23,4 @@ def add_to_cart(product_id):
     return render_template('index.html', products=products, cart=cart)
 
 if __name__ == '__main__':
-    # app.run(host='0.0.0.0', port=5001, debug=True)
-    app.run(host='localhost', port=5002, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
